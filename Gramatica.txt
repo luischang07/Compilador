@@ -1,0 +1,20 @@
+GRAMATICA:
+Program: <statement> | <statement> <program>
+Statement: <declaration> | <assignment> | <Print>
+Declaration: <Type> <Identifier> | <Type> <Assignment> |
+  <Declaration> “,” <Identifier> 
+Type: “int” | “String”
+Identifier: <Letter> | <Identifier> <Letter> | <Identifier> <Digit>
+Assignment: <Identifier> “=” <Expression>
+Expression: <Term> | <Expression> <Operator> <Term>
+Term: <Factor> | <Term> <Operator> <Factor>
+Factor: <Identifier> | <number> | <String>
+Print: “BDZtoUser(” (<Term> “,”)*   “)”
+Operator: “+” | “-“ | “*” | “==” | "!=" | “>” | “<” | “<=” | “>=”
+Number: <Digit> | <Number> <Digit>
+String: ‘\”’ <Identifier> ‘\”’
+
+
+ParéntesisAbre: (
+ParéntesisCierra: )
+Pr: int, String, BDZtoUser

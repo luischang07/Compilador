@@ -1,23 +1,29 @@
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.border.Border;
+import javax.swing.JTextPane;
 
 import java.awt.Color;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import javax.swing.JScrollPane;
+import compilerTools.Functions;
+
+import java.util.ArrayList;
 
 public class AreaComponent extends JPanel implements ComponentListener {
 
-    private JTextArea txtAreaProgram, txtAreaTokens;
+    private JTextPane txtAreaProgram, txtAreaTokens;
+    private JScrollPane scrollPane, scrollPane2;
 
     private JButton btnArchivos;
-    private JButton[] btnCompilador;
+    private MyButton[] btnCompilador;
 
     public AreaComponent() {
         Interface();
         Listeners();
+        Functions.setLineNumberOnJTextComponent(txtAreaProgram);
+        Functions.setLineNumberOnJTextComponent(txtAreaTokens);
     }
 
     private void Listeners() {
@@ -27,24 +33,33 @@ public class AreaComponent extends JPanel implements ComponentListener {
     private void Interface() {
         setLayout(null);
         setBorder(BorderFactory.createLineBorder(Color.black));
-        txtAreaProgram = new JTextArea();
-        add(txtAreaProgram);
 
-        txtAreaTokens = new JTextArea();
-        add(txtAreaTokens);
+        txtAreaProgram = new JTextPane();
+        txtAreaTokens = new JTextPane();
+
+        scrollPane = new JScrollPane(txtAreaProgram);
+        scrollPane2 = new JScrollPane(txtAreaTokens);
+
+        add(scrollPane);
+        add(scrollPane2);
 
         btnArchivos = new JButton();
         btnArchivos.setText("Open File");
         add(btnArchivos);
 
-        btnCompilador = new JButton[2];
+        btnCompilador = new MyButton[2];
         for (int i = 0; i < btnCompilador.length; i++) {
-            btnCompilador[i] = new JButton();
+            btnCompilador[i] = new MyButton(i);
         }
-        btnCompilador[0].setText("Scanner");
-        btnCompilador[1].setText("Syntax");
-        add(btnCompilador[0]);
-        add(btnCompilador[1]);
+
+        btnCompilador[0].setName("Scanner");
+        btnCompilador[1].setName("Syntax");
+        btnCompilador[0].setText(btnCompilador[0].getName());
+        btnCompilador[1].setText(btnCompilador[1].getName());
+
+        for (int i = 0; i < btnCompilador.length; i++) {
+            add(btnCompilador[i]);
+        }
     }
 
     @Override
@@ -55,18 +70,18 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnArchivos.setBounds((int) (w * .02), (int) (h * .02),
                 (int) (w * .2), (int) (h * .09));
 
-        txtAreaProgram.setBounds(btnArchivos.getX(), btnArchivos.getY() + (int) (btnArchivos.getHeight() * 1.4),
+        scrollPane.setBounds(btnArchivos.getX(), btnArchivos.getY() + (int) (btnArchivos.getHeight() * 1.4),
                 (int) (w * .4),
                 (int) (h * .9) - btnArchivos.getHeight());
 
         for (int i = 0; i < btnCompilador.length; i++) {
-            btnCompilador[i].setBounds((int) (txtAreaProgram.getWidth() * 1.1), txtAreaProgram.getY() * (i + 1),
+            btnCompilador[i].setBounds((int) (scrollPane.getWidth() * 1.1), scrollPane.getY() * (i + 1),
                     btnArchivos.getWidth(), btnArchivos.getHeight());
         }
 
-        txtAreaTokens.setBounds(btnCompilador[0].getX() + (int) (btnCompilador[0].getWidth() * 1.1),
-                btnCompilador[0].getY(), (int) (w * .92) - txtAreaProgram.getWidth() - btnArchivos.getWidth(),
-                txtAreaProgram.getHeight());
+        scrollPane2.setBounds(btnCompilador[0].getX() + (int) (btnCompilador[0].getWidth() * 1.1),
+                btnCompilador[0].getY(), (int) (w * .92) - scrollPane.getWidth() - btnArchivos.getWidth(),
+                scrollPane.getHeight());
 
     }
 
@@ -82,11 +97,11 @@ public class AreaComponent extends JPanel implements ComponentListener {
     public void componentHidden(ComponentEvent e) {
     }
 
-    public JTextArea getTxtAreaProgram() {
+    public JTextPane getTxtAreaProgram() {
         return txtAreaProgram;
     }
 
-    public JTextArea getTxtAreaTokens() {
+    public JTextPane getTxtAreaTokens() {
         return txtAreaTokens;
     }
 
@@ -96,5 +111,12 @@ public class AreaComponent extends JPanel implements ComponentListener {
 
     public JButton[] getBtnCompilador() {
         return btnCompilador;
+    }
+
+    public void setTextAreaTokens(ArrayList<String> textTokens) {
+        txtAreaTokens.setText("");
+        for (String token : textTokens) {
+            txtAreaTokens.setText(txtAreaTokens.getText() + token + "\n");
+        }
     }
 }
