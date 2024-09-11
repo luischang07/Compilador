@@ -1,5 +1,6 @@
+
 import javax.swing.JTextPane;
-import java.util.ArrayList;
+import java.util.List;
 
 public class Modelo {
 
@@ -12,12 +13,14 @@ public class Modelo {
         fileImport.openFile();
     }
 
-    public ArrayList<String> Scanner(String text) {
+    public List<TokenInfo> scanner(String text) {
         Scanner scanner = new Scanner(text);
-        return scanner.Lexer();
+        return scanner.lexer();
     }
 
-    public void Syntax(String text) {
-        System.out.println("Syntax: " + text);
+    public boolean syntax(String text) {
+        List<TokenInfo> tokens = scanner(text);
+        Parser parser = new Parser(tokens);
+        return parser.parseProgram();
     }
 }

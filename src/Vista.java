@@ -35,11 +35,11 @@ public class Vista extends JFrame implements ComponentListener {
 
     @Override
     public void componentResized(ComponentEvent e) {
-        int w = this.getWidth();
-        int h = this.getHeight();
+        short w = (short) this.getWidth();
+        short h = (short) this.getHeight();
 
-        areaComponent.setBounds((int) (w * .05), (int) (h * .05),
-                (int) (w * .9), (int) (h * .50));
+        areaComponent.setBounds((short) (w * .02), (short) (h * .05),
+                (short) (w * .95), (short) (h * .50));
     }
 
     @Override

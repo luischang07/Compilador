@@ -1,6 +1,8 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JLabel;
+
 public class Controlador implements ActionListener {
 
     Modelo model;
@@ -11,19 +13,25 @@ public class Controlador implements ActionListener {
         this.model = model;
         this.vista = vista;
         this.component = component;
-        Listeners();
+        listeners();
     }
 
-    private void Listeners() {
-        for (int i = 0; i < component.getBtnCompilador().length; i++) {
+    private void listeners() {
+        for (byte i = 0; i < component.getBtnCompilador().length; i++) {
             component.getBtnCompilador()[i].addActionListener(this);
-
         }
+        component.getBtnLLimpiar().addActionListener(this);
         component.getBtnArchivos().addActionListener(this);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == component.getBtnLLimpiar()) {
+            component.getTxtAreaProgram().setText("");
+            component.getTxtAreaTokens().setText("");
+            component.getLblParser().setVisible(false);
+            return;
+        }
         if (e.getSource() == component.getBtnArchivos()) {
             model.openFile(component.getTxtAreaProgram());
             return;
@@ -31,9 +39,18 @@ public class Controlador implements ActionListener {
 
         MyButton btnAux = (MyButton) e.getSource();
         if (btnAux.getId() == 0) {
-            component.setTextAreaTokens(model.Scanner(component.getTxtAreaProgram().getText()));
+            component.setTextAreaTokens(model.scanner(component.getTxtAreaProgram().getText()));
         } else {
-            model.Syntax(component.getTxtAreaProgram().getText());
+            boolean syntax = model.syntax(component.getTxtAreaProgram().getText());
+            System.out.println("Syntax: " + syntax);
+            JLabel lbl = component.getLblParser();
+            lbl.setVisible(true);
+            lbl.setText("Parser: ");
+            if (syntax) {
+                lbl.setText(lbl.getText() + "Correct");
+            } else {
+                lbl.setText(lbl.getText() + "Incorrect");
+            }
         }
 
     }

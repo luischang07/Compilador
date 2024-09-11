@@ -1,3 +1,4 @@
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class FileImport {
 
     public void openFile() {
         JFileChooser fileChooser = new JFileChooser();
-        int result = fileChooser.showOpenDialog(null);
+        byte result = (byte) fileChooser.showOpenDialog(null);
         if (result == JFileChooser.APPROVE_OPTION) {
             String filePath = fileChooser.getSelectedFile().getAbsolutePath();
             loadFile(filePath);

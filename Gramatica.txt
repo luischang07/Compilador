@@ -14,7 +14,6 @@ Operator: “+” | “-“ | “*” | “==” | "!=" | “>” | “<” | �
 Number: <Digit> | <Number> <Digit>
 String: ‘\”’ <Identifier> ‘\”’
 
-
 ParéntesisAbre: (
 ParéntesisCierra: )
 Pr: int, String, BDZtoUser

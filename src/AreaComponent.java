@@ -1,7 +1,9 @@
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+import javax.swing.JLabel;
 
 import java.awt.Color;
 import java.awt.event.ComponentEvent;
@@ -9,33 +11,41 @@ import java.awt.event.ComponentListener;
 import javax.swing.JScrollPane;
 import compilerTools.Functions;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class AreaComponent extends JPanel implements ComponentListener {
 
-    private JTextPane txtAreaProgram, txtAreaTokens;
-    private JScrollPane scrollPane, scrollPane2;
+    private JTextPane txtAreaProgram;
+    private JTextPane txtAreaTokens;
+
+    private JScrollPane scrollPane;
+    private JScrollPane scrollPane2;
 
     private JButton btnArchivos;
+    private JButton btnLLimpiar;
     private MyButton[] btnCompilador;
 
+    private JLabel lblParser;
+
     public AreaComponent() {
-        Interface();
-        Listeners();
+        initInterface();
+        listeners();
         Functions.setLineNumberOnJTextComponent(txtAreaProgram);
         Functions.setLineNumberOnJTextComponent(txtAreaTokens);
     }
 
-    private void Listeners() {
+    private void listeners() {
         addComponentListener(this);
     }
 
-    private void Interface() {
+    private void initInterface() {
         setLayout(null);
         setBorder(BorderFactory.createLineBorder(Color.black));
 
         txtAreaProgram = new JTextPane();
         txtAreaTokens = new JTextPane();
+        txtAreaTokens.setEditable(false);
+        txtAreaTokens.setBackground(Color.white);
 
         scrollPane = new JScrollPane(txtAreaProgram);
         scrollPane2 = new JScrollPane(txtAreaTokens);
@@ -47,8 +57,12 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnArchivos.setText("Open File");
         add(btnArchivos);
 
+        btnLLimpiar = new JButton();
+        btnLLimpiar.setText("Clear");
+        add(btnLLimpiar);
+
         btnCompilador = new MyButton[2];
-        for (int i = 0; i < btnCompilador.length; i++) {
+        for (byte i = 0; i < btnCompilador.length; i++) {
             btnCompilador[i] = new MyButton(i);
         }
 
@@ -57,32 +71,45 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnCompilador[0].setText(btnCompilador[0].getName());
         btnCompilador[1].setText(btnCompilador[1].getName());
 
-        for (int i = 0; i < btnCompilador.length; i++) {
+        for (short i = 0; i < btnCompilador.length; i++) {
             add(btnCompilador[i]);
         }
+
+        lblParser = new JLabel();
+        add(lblParser);
     }
 
     @Override
     public void componentResized(ComponentEvent e) {
-        int w = this.getWidth();
-        int h = this.getHeight();
+        short w = (short) this.getWidth();
+        short h = (short) this.getHeight();
 
-        btnArchivos.setBounds((int) (w * .02), (int) (h * .02),
-                (int) (w * .2), (int) (h * .09));
+        btnArchivos.setBounds((short) (w * .01), (short) (h * .02),
+                (short) (w * .2), (short) (h * .09));
 
-        scrollPane.setBounds(btnArchivos.getX(), btnArchivos.getY() + (int) (btnArchivos.getHeight() * 1.4),
-                (int) (w * .4),
-                (int) (h * .9) - btnArchivos.getHeight());
+        btnLLimpiar.setBounds(btnArchivos.getX() + (short) (btnArchivos.getWidth() * 1.1), btnArchivos.getY(),
+                (short) (btnArchivos.getWidth() * .7), btnArchivos.getHeight());
 
-        for (int i = 0; i < btnCompilador.length; i++) {
-            btnCompilador[i].setBounds((int) (scrollPane.getWidth() * 1.1), scrollPane.getY() * (i + 1),
-                    btnArchivos.getWidth(), btnArchivos.getHeight());
-        }
+        scrollPane.setBounds(btnArchivos.getX(), btnArchivos.getY() + (short) (btnArchivos.getHeight() * 1.4),
+                (short) (w * .35),
+                (short) (h * .9) - btnArchivos.getHeight());
 
-        scrollPane2.setBounds(btnCompilador[0].getX() + (int) (btnCompilador[0].getWidth() * 1.1),
-                btnCompilador[0].getY(), (int) (w * .92) - scrollPane.getWidth() - btnArchivos.getWidth(),
+        // for (short i = 0; i < btnCompilador.length; i++) {
+        btnCompilador[0].setBounds((short) (scrollPane.getWidth() * 1.1), scrollPane.getY(),
+                (short) (btnArchivos.getWidth() * .8), btnArchivos.getHeight());
+        // }
+
+        scrollPane2.setBounds(btnCompilador[0].getX() + (short) (btnCompilador[0].getWidth() * 1.1),
+                btnCompilador[0].getY(), (short) (w * .8) - scrollPane.getWidth() - btnArchivos.getWidth(),
                 scrollPane.getHeight());
 
+        btnCompilador[1].setBounds(scrollPane2.getX() + (short) (scrollPane2.getWidth() * 1.1), scrollPane2.getY(),
+                (short) (w * .9) - scrollPane2.getWidth() - btnCompilador[0].getWidth() - scrollPane.getWidth(),
+                (short) (h * .09));
+
+        lblParser.setBounds(btnCompilador[1].getX(),
+                btnCompilador[1].getY() + (short) (btnCompilador[1].getHeight() * 1.4),
+                btnCompilador[1].getWidth(), btnCompilador[1].getHeight());
     }
 
     @Override
@@ -113,10 +140,20 @@ public class AreaComponent extends JPanel implements ComponentListener {
         return btnCompilador;
     }
 
-    public void setTextAreaTokens(ArrayList<String> textTokens) {
+    public JLabel getLblParser() {
+        return lblParser;
+    }
+
+    public JButton getBtnLLimpiar() {
+        return btnLLimpiar;
+    }
+
+    public void setTextAreaTokens(List<TokenInfo> textTokens) {
         txtAreaTokens.setText("");
-        for (String token : textTokens) {
-            txtAreaTokens.setText(txtAreaTokens.getText() + token + "\n");
+        for (TokenInfo token : textTokens) {
+            txtAreaTokens.setText(
+                    txtAreaTokens.getText() + token.getName() + "(" + token.getNumber() + "), " + token.getValue()
+                            + "\n");
         }
     }
 }

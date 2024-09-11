@@ -1,19 +1,19 @@
 import javax.swing.JButton;
 
 public class MyButton extends JButton {
-    private int id;
+    private byte id;
     private String name;
 
-    public MyButton(int id) {
+    public MyButton(byte id) {
         this.id = id;
     }
 
-    public MyButton(int id, String name) {
+    public MyButton(byte id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public int getId() {
+    public byte getId() {
         return id;
     }
 
