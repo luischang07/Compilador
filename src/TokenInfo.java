@@ -22,6 +22,10 @@ public class TokenInfo {
         return value;
     }
 
+    public boolean isTokenType(byte expectedType) {
+        return number == expectedType;
+    }
+
     @Override
     public String toString() {
         return "TokenInfo{" +

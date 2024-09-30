@@ -1,7 +1,12 @@
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.formdev.flatlaf.extras.components.FlatLabel.LabelType;
 
 public class Controlador implements ActionListener {
 
@@ -14,6 +19,7 @@ public class Controlador implements ActionListener {
         this.vista = vista;
         this.component = component;
         listeners();
+        vista.setVisible(true);
     }
 
     private void listeners() {
@@ -25,34 +31,47 @@ public class Controlador implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == component.getBtnLLimpiar()) {
-            component.getTxtAreaProgram().setText("");
-            component.getTxtAreaTokens().setText("");
-            component.getLblParser().setVisible(false);
+    public void actionPerformed(ActionEvent evt) {
+        if (evt.getSource() == component.getBtnLLimpiar()) {
+            vista.symbolTable.setVisible(false);
+            component.clear();
             return;
         }
-        if (e.getSource() == component.getBtnArchivos()) {
+        if (evt.getSource() == component.getBtnArchivos()) {
             model.openFile(component.getTxtAreaProgram());
             return;
         }
-
-        MyButton btnAux = (MyButton) e.getSource();
+        MyButton btnAux = (MyButton) evt.getSource();
         if (btnAux.getId() == 0) {
             component.setTextAreaTokens(model.scanner(component.getTxtAreaProgram().getText()));
-        } else {
-            boolean syntax = model.syntax(component.getTxtAreaProgram().getText());
-            System.out.println("Syntax: " + syntax);
-            JLabel lbl = component.getLblParser();
-            lbl.setVisible(true);
-            lbl.setText("Parser: ");
-            if (syntax) {
-                lbl.setText(lbl.getText() + "Correct");
-            } else {
-                lbl.setText(lbl.getText() + "Incorrect");
+            return;
+        }
+        if (btnAux.getId() == 1) {
+            try {
+                boolean syntax = model.syntax(component.getTxtAreaProgram().getText());
+                updateParserStatus(syntax);
+            } catch (ParserException e) {
+                updateParserStatus(false);
+                vista.showMessage(e.getMessage(), "Error: Parser", JOptionPane.ERROR_MESSAGE);
+            }
+            return;
+        }
+        if (btnAux.getId() == 2) {
+            component.getBtnCompilador()[2].setEnabled(false);
+            vista.fillSymbolTable(model.getSymbolTable());
+            try {
+                component.showLbl(model.semantic(), component.getLblSemantic(), "Semantic: ");
+            } catch (SemanticException e) {
+                component.showLbl(false, component.getLblSemantic(), "Semantic: ");
+                
+                vista.showMessage(e.getMessage(), "Error: Semantic", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
 
+    private void updateParserStatus(boolean status) {
+        component.showLbl(status, component.getLblParser(), "Parser: ");
+        component.getBtnCompilador()[2].setEnabled(status);
     }
 
 }

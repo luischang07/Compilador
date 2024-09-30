@@ -3,6 +3,9 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+
+import com.formdev.flatlaf.FlatLaf;
+
 import javax.swing.JLabel;
 
 import java.awt.Color;
@@ -26,6 +29,7 @@ public class AreaComponent extends JPanel implements ComponentListener {
     private MyButton[] btnCompilador;
 
     private JLabel lblParser;
+    private JLabel lblSemantic;
 
     public AreaComponent() {
         initInterface();
@@ -61,15 +65,18 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnLLimpiar.setText("Clear");
         add(btnLLimpiar);
 
-        btnCompilador = new MyButton[2];
+        btnCompilador = new MyButton[3];
         for (byte i = 0; i < btnCompilador.length; i++) {
             btnCompilador[i] = new MyButton(i);
         }
 
-        btnCompilador[0].setName("Scanner");
+        btnCompilador[0].setName("Scanner"); // ???
         btnCompilador[1].setName("Syntax");
+        btnCompilador[2].setName("Semantic");
         btnCompilador[0].setText(btnCompilador[0].getName());
         btnCompilador[1].setText(btnCompilador[1].getName());
+        btnCompilador[2].setText(btnCompilador[2].getName());
+        btnCompilador[2].setEnabled(false);
 
         for (short i = 0; i < btnCompilador.length; i++) {
             add(btnCompilador[i]);
@@ -77,6 +84,26 @@ public class AreaComponent extends JPanel implements ComponentListener {
 
         lblParser = new JLabel();
         add(lblParser);
+
+        lblSemantic = new JLabel();
+        add(lblSemantic);
+    }
+
+    public void clear() {
+        txtAreaProgram.setText("");
+        txtAreaTokens.setText("");
+        lblParser.setVisible(false);
+        lblSemantic.setVisible(false);
+    }
+
+    public void showLbl(boolean syntax, JLabel lbl, String text) {
+        lbl.setVisible(true);
+        lbl.setText(text);
+        if (syntax) {
+            lbl.setText(lbl.getText() + "Correct");
+        } else {
+            lbl.setText(lbl.getText() + "Incorrect");
+        }
     }
 
     @Override
@@ -110,18 +137,30 @@ public class AreaComponent extends JPanel implements ComponentListener {
         lblParser.setBounds(btnCompilador[1].getX(),
                 btnCompilador[1].getY() + (short) (btnCompilador[1].getHeight() * 1.4),
                 btnCompilador[1].getWidth(), btnCompilador[1].getHeight());
+
+        btnCompilador[2].setBounds(lblParser.getX(), lblParser.getY() + (short) (lblParser.getHeight() * 1.4),
+                btnCompilador[1].getWidth(), btnCompilador[1].getHeight());
+
+        lblSemantic.setBounds(btnCompilador[2].getX(),
+                btnCompilador[2].getY() + (short) (btnCompilador[2].getHeight() * 1.4),
+                btnCompilador[2].getWidth(), btnCompilador[2].getHeight());
+
+        FlatLaf.updateUI();
     }
 
     @Override
     public void componentMoved(ComponentEvent e) {
+        // This method is not used
     }
 
     @Override
     public void componentShown(ComponentEvent e) {
+        // This method is not used
     }
 
     @Override
     public void componentHidden(ComponentEvent e) {
+        // This method is not used
     }
 
     public JTextPane getTxtAreaProgram() {
@@ -142,6 +181,10 @@ public class AreaComponent extends JPanel implements ComponentListener {
 
     public JLabel getLblParser() {
         return lblParser;
+    }
+
+    public JLabel getLblSemantic() {
+        return lblSemantic;
     }
 
     public JButton getBtnLLimpiar() {

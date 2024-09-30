@@ -2,13 +2,13 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Scanner {
+public class ScannerAnalyzer {
 
     String input;
     StringBuilder token;
     ArrayList<TokenInfo> tokensOutput;
 
-    public Scanner(String input) {
+    public ScannerAnalyzer(String input) {
         this.input = input;
         token = new StringBuilder();
         tokensOutput = new ArrayList<>();

@@ -1,11 +1,19 @@
 
 import javax.swing.JTextPane;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 public class Modelo {
 
-    public Modelo() {
+    SemanticAnalyzer semanticAnalyzer;
+    Map<String, VariableInfo> symbolTable;
+    boolean isNotDeclared, duplicate;
+    String id;
 
+    Logger logger = Logger.getLogger(Modelo.class.getName());
+
+    public Modelo() {
     }
 
     public void openFile(JTextPane textArea) {
@@ -14,13 +22,34 @@ public class Modelo {
     }
 
     public List<TokenInfo> scanner(String text) {
-        Scanner scanner = new Scanner(text);
+        ScannerAnalyzer scanner = new ScannerAnalyzer(text);
         return scanner.lexer();
     }
 
     public boolean syntax(String text) {
         List<TokenInfo> tokens = scanner(text);
-        Parser parser = new Parser(tokens);
-        return parser.parseProgram();
+        ParserAnalyzer parser = new ParserAnalyzer(tokens);
+        symbolTable = parser.getSymbolTable();
+        if (parser.parseProgram()) {
+            id = parser.getId();
+            isNotDeclared = parser.getIsNotDeclared();
+            duplicate = parser.getDuplicated();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean semantic() throws SemanticException {
+        if (isNotDeclared) // in assignment
+            throw new SemanticException("Error: Variable '" + id + "' is not declared.");
+        if (duplicate) // in declaration
+            throw new SemanticException("Error: Variable '" + id + "' is already declared.");
+
+        semanticAnalyzer = new SemanticAnalyzer(symbolTable);
+        return semanticAnalyzer.semantic();
+    }
+
+    public Map<String, VariableInfo> getSymbolTable() {
+        return symbolTable;
     }
 }
