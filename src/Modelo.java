@@ -13,9 +13,6 @@ public class Modelo {
 
     Logger logger = Logger.getLogger(Modelo.class.getName());
 
-    public Modelo() {
-    }
-
     public void openFile(JTextPane textArea) {
         FileImport fileImport = new FileImport(textArea);
         fileImport.openFile();
@@ -30,6 +27,7 @@ public class Modelo {
         List<TokenInfo> tokens = scanner(text);
         ParserAnalyzer parser = new ParserAnalyzer(tokens);
         symbolTable = parser.getSymbolTable();
+        symbolTable.forEach((key, value) -> logger.info(key + " " + value));
         if (parser.parseProgram()) {
             id = parser.getId();
             isNotDeclared = parser.getIsNotDeclared();
@@ -47,6 +45,11 @@ public class Modelo {
 
         semanticAnalyzer = new SemanticAnalyzer(symbolTable);
         return semanticAnalyzer.semantic();
+    }
+
+    public List<String> codigoIntermedio() {
+        CodigoIntermedio codigoIntermedio = new CodigoIntermedio(symbolTable);
+        return codigoIntermedio.getCodigoIntermedio();
     }
 
     public Map<String, VariableInfo> getSymbolTable() {

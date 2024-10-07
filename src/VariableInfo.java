@@ -3,16 +3,19 @@ public class VariableInfo {
     private String type;
     private boolean initialized;
     private String value;
+    private int Bytes;
 
-    public VariableInfo(String type) {
+    public VariableInfo(String type, int Bytes) {
         this.type = type;
+        this.Bytes = Bytes;
         initialized = false;
     }
 
-    public VariableInfo(String type, String value) {
+    public VariableInfo(String type, String value, int Bytes) {
         this.type = type;
         initialized = true;
         this.value = value;
+        this.Bytes = Bytes;
     }
 
     public String getType() {
@@ -25,6 +28,10 @@ public class VariableInfo {
 
     public String getValue() {
         return value;
+    }
+
+    public int getBytes() {
+        return Bytes;
     }
 
     public void setInitialized(boolean initialized) {

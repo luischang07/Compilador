@@ -1,4 +1,5 @@
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -34,7 +35,9 @@ public class Controlador implements ActionListener {
     public void actionPerformed(ActionEvent evt) {
         if (evt.getSource() == component.getBtnLLimpiar()) {
             vista.symbolTable.setVisible(false);
+            vista.txtAreaCodigoIntermedio.setVisible(false);
             component.clear();
+
             return;
         }
         if (evt.getSource() == component.getBtnArchivos()) {
@@ -47,6 +50,7 @@ public class Controlador implements ActionListener {
             return;
         }
         if (btnAux.getId() == 1) {
+            component.getLblSemantic().setVisible(false);
             try {
                 boolean syntax = model.syntax(component.getTxtAreaProgram().getText());
                 updateParserStatus(syntax);
@@ -61,17 +65,22 @@ public class Controlador implements ActionListener {
             vista.fillSymbolTable(model.getSymbolTable());
             try {
                 component.showLbl(model.semantic(), component.getLblSemantic(), "Semantic: ");
+                component.getBtnCompilador()[3].setEnabled(true);
             } catch (SemanticException e) {
                 component.showLbl(false, component.getLblSemantic(), "Semantic: ");
-                
+
                 vista.showMessage(e.getMessage(), "Error: Semantic", JOptionPane.ERROR_MESSAGE);
             }
+        }
+        if (btnAux.getId() == 3) {
+            component.getBtnCompilador()[3].setEnabled(false);
+            vista.showCodigoIntermedio(model.codigoIntermedio());
         }
     }
 
     private void updateParserStatus(boolean status) {
         component.showLbl(status, component.getLblParser(), "Parser: ");
-        component.getBtnCompilador()[2].setEnabled(status);
+        component.getBtnCompilador()[2].setEnabled(status); // Semantic
     }
 
 }

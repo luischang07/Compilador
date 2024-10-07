@@ -9,6 +9,7 @@ import com.formdev.flatlaf.FlatLaf;
 import javax.swing.JLabel;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import javax.swing.JScrollPane;
@@ -65,7 +66,7 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnLLimpiar.setText("Clear");
         add(btnLLimpiar);
 
-        btnCompilador = new MyButton[3];
+        btnCompilador = new MyButton[4];
         for (byte i = 0; i < btnCompilador.length; i++) {
             btnCompilador[i] = new MyButton(i);
         }
@@ -73,16 +74,22 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnCompilador[0].setName("Scanner"); // ???
         btnCompilador[1].setName("Syntax");
         btnCompilador[2].setName("Semantic");
+        btnCompilador[3].setName("Codigo Intermedio");
+
         btnCompilador[0].setText(btnCompilador[0].getName());
         btnCompilador[1].setText(btnCompilador[1].getName());
         btnCompilador[2].setText(btnCompilador[2].getName());
+        btnCompilador[3].setText(btnCompilador[3].getName());
+
         btnCompilador[2].setEnabled(false);
+        btnCompilador[3].setEnabled(false);
 
         for (short i = 0; i < btnCompilador.length; i++) {
             add(btnCompilador[i]);
         }
 
         lblParser = new JLabel();
+        lblParser.setFont(new Font("Arial", Font.BOLD, 16));
         add(lblParser);
 
         lblSemantic = new JLabel();
@@ -100,9 +107,11 @@ public class AreaComponent extends JPanel implements ComponentListener {
         lbl.setVisible(true);
         lbl.setText(text);
         if (syntax) {
+            lbl.setForeground(new Color(65, 200, 15));
             lbl.setText(lbl.getText() + "Correct");
         } else {
             lbl.setText(lbl.getText() + "Incorrect");
+            lbl.setForeground(new Color(200, 15, 15));
         }
     }
 
@@ -143,6 +152,9 @@ public class AreaComponent extends JPanel implements ComponentListener {
 
         lblSemantic.setBounds(btnCompilador[2].getX(),
                 btnCompilador[2].getY() + (short) (btnCompilador[2].getHeight() * 1.4),
+                btnCompilador[2].getWidth(), btnCompilador[2].getHeight());
+
+        btnCompilador[3].setBounds(lblSemantic.getX(), lblSemantic.getY() + (short) (lblSemantic.getHeight() * 1.4),
                 btnCompilador[2].getWidth(), btnCompilador[2].getHeight());
 
         FlatLaf.updateUI();

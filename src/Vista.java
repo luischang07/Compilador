@@ -1,6 +1,7 @@
 
 import javax.swing.JFrame;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -11,7 +12,8 @@ import com.formdev.flatlaf.FlatLaf;
 import javax.swing.ScrollPaneConstants;
 
 import java.util.Map;
-
+import java.util.List;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
@@ -19,8 +21,10 @@ import java.awt.event.ComponentListener;
 public class Vista extends JFrame implements ComponentListener {
 
     AreaComponent areaComponent; // textArea - btnArchivos - btnPhaseCompilador[] - txtAreaTokens
+    JTextArea txtAreaCodigoIntermedio;
     JTable symbolTable;
-    JScrollPane scrollPane;
+    JScrollPane scrollPaneTabla;
+    JScrollPane scrollPaneCodigoIntermedio;
     DefaultTableModel model;
 
     public Vista(AreaComponent areaComponent) {
@@ -49,21 +53,41 @@ public class Vista extends JFrame implements ComponentListener {
         model.addColumn("Type");
         model.addColumn("Value");
         model.addColumn("Initialized");
+        model.addColumn("Bytes");
 
         symbolTable.setDefaultEditor(Object.class, null);
 
-        scrollPane = new JScrollPane(symbolTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+        scrollPaneTabla = new JScrollPane(symbolTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVisible(false);
+        scrollPaneTabla.setVisible(false);
 
-        add(scrollPane);
+        txtAreaCodigoIntermedio = new JTextArea();
+        txtAreaCodigoIntermedio.setEditable(false);
+        txtAreaCodigoIntermedio.setBackground(Color.white);
+        txtAreaCodigoIntermedio.setLineWrap(true);
+
+        scrollPaneCodigoIntermedio = new JScrollPane(txtAreaCodigoIntermedio,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPaneCodigoIntermedio.setVisible(false);
+
+        add(scrollPaneCodigoIntermedio);
+
+        add(scrollPaneTabla);
     }
 
     public void fillSymbolTable(Map<String, VariableInfo> symbolTable) {
-        scrollPane.setVisible(true);
+        scrollPaneTabla.setVisible(true);
         model.setRowCount(0);
         symbolTable.forEach((key, value) -> model
-                .addRow(new Object[] { key, value.getType(), value.getValue(), value.isInitialized() }));
+                .addRow(new Object[] { key, value.getType(), value.getValue(), value.isInitialized(),
+                        value.getBytes() }));
+    }
+
+    public void showCodigoIntermedio(List<String> codigoIntermedio) {
+        scrollPaneCodigoIntermedio.setVisible(true);
+        txtAreaCodigoIntermedio.setText("");
+        codigoIntermedio.forEach(line -> txtAreaCodigoIntermedio.append(line + "\n"));
     }
 
     public void showMessage(String message, String title, int type) {
@@ -78,9 +102,14 @@ public class Vista extends JFrame implements ComponentListener {
         areaComponent.setBounds((short) (w * .02), (short) (h * .05),
                 (short) (w * .95), (short) (h * .50));
 
-        scrollPane.setBounds(areaComponent.getWidth() - areaComponent.getWidth() / 3,
+        scrollPaneTabla.setBounds(areaComponent.getWidth() - areaComponent.getWidth() / 3,
                 areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05),
                 areaComponent.getWidth() / 3,
+                (short) (h * .9) - (areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05)));
+
+        scrollPaneCodigoIntermedio.setBounds(areaComponent.getX(),
+                areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05),
+                (short) (areaComponent.getWidth() * .9 - scrollPaneTabla.getWidth()),
                 (short) (h * .9) - (areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05)));
 
         FlatLaf.updateUI();

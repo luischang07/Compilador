@@ -17,7 +17,6 @@ public class Tokens {
                 GREATERTHANEQUAL,
                 EQUAL,
                 PR,
-
                 NUMBER, // 17
                 IDENTIFIER, // 18
                 INVALID_TOKEN, // 19

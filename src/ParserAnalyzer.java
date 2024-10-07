@@ -17,6 +17,7 @@ public class ParserAnalyzer {
 
     private Map<String, VariableInfo> symbolTable;
     private String id;
+    private int bytes;
     private boolean isNotDeclared;
     private boolean duplicated;
 
@@ -45,6 +46,10 @@ public class ParserAnalyzer {
         System.out.println("Statement:   " + token.getName() + " " + token.getValue());
         if (isType()) {
             type = token.getValue();
+            if (token.isTokenType(Tokens.INT))
+                bytes = 4;
+            else if (token.isTokenType(Tokens.STRING))
+                bytes = 80;
             return parseDeclaration();
         } else if (token.isTokenType(Tokens.IDENTIFIER)) {
             identifier = token.getValue();
@@ -68,7 +73,8 @@ public class ParserAnalyzer {
                 id = identifier;
                 duplicated = true;
             }
-            symbolTable.put(identifier, new VariableInfo(type));
+
+            symbolTable.put(identifier, new VariableInfo(type, bytes));
             // semanticAnalyzer.declareVariable(identifier, type);
 
             if (!hasNext())
@@ -88,7 +94,7 @@ public class ParserAnalyzer {
                     isNotDeclared = true;
                 }
 
-                symbolTable.put(identifier, new VariableInfo(type, str.toString()));
+                symbolTable.put(identifier, new VariableInfo(type, str.toString(), bytes));
                 // if (token.isTokenType(Tokens.IDENTIFIER)) {
                 // VariableInfo matchedVar = semanticAnalyzer.lookupVariable(token.getValue());
                 // semanticAnalyzer.initializeVariable(identifier, matchedVar);
@@ -98,6 +104,7 @@ public class ParserAnalyzer {
                 if (hasNext())
                     token = advanceToken("Error: Invalid declaration");
             }
+            bytes = 80;
         } while (token.isTokenType(Tokens.COMA));
         goToNextTk = false;
         return true;
@@ -120,9 +127,10 @@ public class ParserAnalyzer {
 
             if (variableInfo != null && variableInfo.getType() != null) {
                 type = variableInfo.getType();
-                symbolTable.put(identifier, new VariableInfo(type, str.toString()));
+                // bytes = variableInfo.getBytes();
+                symbolTable.put(identifier, new VariableInfo(type, str.toString(), bytes));
             } else {
-                symbolTable.put(identifier, new VariableInfo(null, str.toString()));
+                symbolTable.put(identifier, new VariableInfo(null, str.toString(), bytes));
             }
             // semanticAnalyzer.checkType(identifier, str.toString());
             return true;
@@ -158,7 +166,23 @@ public class ParserAnalyzer {
     }
 
     private boolean isFactor() {
-        return token.isTokenType(Tokens.NUMBER) || token.isTokenType(Tokens.IDENTIFIER) || parseString();
+        if (token.isTokenType(Tokens.NUMBER)) {
+            bytes = 4;
+            return true;
+        } else if (token.isTokenType(Tokens.IDENTIFIER)) {
+            if (symbolTable.containsKey(token.getValue())) {
+                VariableInfo variableInfo = symbolTable.get(token.getValue());
+                if (variableInfo.getType() != null) {
+                    bytes = variableInfo.getBytes();
+                    return true;
+                }
+            }
+        } else if (parseString()) {
+            bytes = str.length() - 2 + 1;
+            System.out.println(str.toString() + " " + bytes);
+            return true;
+        }
+        return false;
     }
 
     public boolean parseTerms() {
@@ -170,10 +194,12 @@ public class ParserAnalyzer {
         if (!isFactor()) {
             throw new ParserException("Error: Invalid factor: ", token);
         }
+
         if (!hasNext()) {
             return true;
         }
         if (isOperator(peekNextToken())) {
+            System.out.println("Operator:   " + token.getName() + " " + token.getValue() + "-----");
             token = getNextToken();
             str.append(" " + token.getValue());
             return parseTerms();
