@@ -1,13 +1,11 @@
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JOptionPane;
 
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
-import com.formdev.flatlaf.extras.components.FlatLabel.LabelType;
+import exeptions.Exceptions;
+import exeptions.ParserException;
 
 public class Controlador implements ActionListener {
 
@@ -34,9 +32,8 @@ public class Controlador implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent evt) {
         if (evt.getSource() == component.getBtnLLimpiar()) {
-            vista.symbolTable.setVisible(false);
-            vista.txtAreaCodigoIntermedio.setVisible(false);
             component.clear();
+            vista.clear();
 
             return;
         }
@@ -45,11 +42,11 @@ public class Controlador implements ActionListener {
             return;
         }
         MyButton btnAux = (MyButton) evt.getSource();
-        if (btnAux.getId() == 0) {
+        if (btnAux.getId() == 0) { // Scanner
             component.setTextAreaTokens(model.scanner(component.getTxtAreaProgram().getText()));
             return;
         }
-        if (btnAux.getId() == 1) {
+        if (btnAux.getId() == 1) { // Parser
             component.getLblSemantic().setVisible(false);
             try {
                 boolean syntax = model.syntax(component.getTxtAreaProgram().getText());
@@ -60,27 +57,33 @@ public class Controlador implements ActionListener {
             }
             return;
         }
-        if (btnAux.getId() == 2) {
+        if (btnAux.getId() == 2) { // Semantic
             component.getBtnCompilador()[2].setEnabled(false);
-            vista.fillSymbolTable(model.getSymbolTable());
+
             try {
                 component.showLbl(model.semantic(), component.getLblSemantic(), "Semantic: ");
                 component.getBtnCompilador()[3].setEnabled(true);
-            } catch (SemanticException e) {
+            } catch (Exceptions e) {
                 component.showLbl(false, component.getLblSemantic(), "Semantic: ");
-
                 vista.showMessage(e.getMessage(), "Error: Semantic", JOptionPane.ERROR_MESSAGE);
             }
         }
-        if (btnAux.getId() == 3) {
+        if (btnAux.getId() == 3) { // Intermediate Code
             component.getBtnCompilador()[3].setEnabled(false);
+            component.getBtnCompilador()[4].setEnabled(true);
             vista.showCodigoIntermedio(model.codigoIntermedio());
+            return;
         }
+        if (btnAux.getId() == 4) { // Object Code
+            component.getBtnCompilador()[4].setEnabled(false);
+            vista.showCodigoObjeto(model.codigoObjeto());
+            return;
+        }
+
     }
 
     private void updateParserStatus(boolean status) {
         component.showLbl(status, component.getLblParser(), "Parser: ");
         component.getBtnCompilador()[2].setEnabled(status); // Semantic
     }
-
 }

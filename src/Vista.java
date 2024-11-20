@@ -1,30 +1,33 @@
 
-import javax.swing.JFrame;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JScrollPane;
-import javax.swing.table.DefaultTableModel;
-
-import javax.swing.JOptionPane;
-
-import com.formdev.flatlaf.FlatLaf;
-
-import javax.swing.ScrollPaneConstants;
-
-import java.util.Map;
-import java.util.List;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.WindowConstants;
+import javax.swing.table.DefaultTableModel;
+
+import com.formdev.flatlaf.FlatLaf;
+
 public class Vista extends JFrame implements ComponentListener {
 
     AreaComponent areaComponent; // textArea - btnArchivos - btnPhaseCompilador[] - txtAreaTokens
+
     JTextArea txtAreaCodigoIntermedio;
-    JTable symbolTable;
-    JScrollPane scrollPaneTabla;
     JScrollPane scrollPaneCodigoIntermedio;
+    JLabel lblCodigoIntermedio;
+
+    JTextArea txtAreaCodigoObjeto;
+    JScrollPane scrollPaneCodigoObjeto;
+    JLabel lblCodigoObjeto;
+
     DefaultTableModel model;
 
     public Vista(AreaComponent areaComponent) {
@@ -40,54 +43,56 @@ public class Vista extends JFrame implements ComponentListener {
 
     private void initializeUI() {
         setMinimumSize(new Dimension(700, 500));
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setLayout(null);
 
         add(areaComponent);
 
-        model = new DefaultTableModel();
-        symbolTable = new JTable(model);
-        model.addColumn("ID");
-        model.addColumn("Type");
-        model.addColumn("Value");
-        model.addColumn("Initialized");
-        model.addColumn("Bytes");
-
-        symbolTable.setDefaultEditor(Object.class, null);
-
-        scrollPaneTabla = new JScrollPane(symbolTable, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPaneTabla.setVisible(false);
+        lblCodigoIntermedio = new JLabel("Codigo Intermedio");
+        add(lblCodigoIntermedio);
+        lblCodigoObjeto = new JLabel("Codigo Objeto");
+        add(lblCodigoObjeto);
 
         txtAreaCodigoIntermedio = new JTextArea();
-        txtAreaCodigoIntermedio.setEditable(false);
-        txtAreaCodigoIntermedio.setBackground(Color.white);
-        txtAreaCodigoIntermedio.setLineWrap(true);
+        txtAreaCodigoObjeto = new JTextArea();
+        scrollPaneCodigoIntermedio = new JScrollPane(txtAreaCodigoIntermedio);
+        scrollPaneCodigoObjeto = new JScrollPane(txtAreaCodigoObjeto);
 
-        scrollPaneCodigoIntermedio = new JScrollPane(txtAreaCodigoIntermedio,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPaneCodigoIntermedio.setVisible(false);
+        initializeScrollPane(scrollPaneCodigoIntermedio, txtAreaCodigoIntermedio);
+        initializeScrollPane(scrollPaneCodigoObjeto, txtAreaCodigoObjeto);
 
-        add(scrollPaneCodigoIntermedio);
-
-        add(scrollPaneTabla);
     }
 
-    public void fillSymbolTable(Map<String, VariableInfo> symbolTable) {
-        scrollPaneTabla.setVisible(true);
-        model.setRowCount(0);
-        symbolTable.forEach((key, value) -> model
-                .addRow(new Object[] { key, value.getType(), value.getValue(), value.isInitialized(),
-                        value.getBytes() }));
+    private void initializeScrollPane(JScrollPane scrollPane, JTextArea textArea) {
+        textArea.setEditable(false);
+        textArea.setBackground(Color.white);
+        textArea.setLineWrap(true);
+
+        scrollPane.setViewportView(textArea);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVisible(false);
+
+        add(scrollPane);
     }
 
-    public void showCodigoIntermedio(List<String> codigoIntermedio) {
-        scrollPaneCodigoIntermedio.setVisible(true);
+    public void clear() {
         txtAreaCodigoIntermedio.setText("");
-        codigoIntermedio.forEach(line -> txtAreaCodigoIntermedio.append(line + "\n"));
+        model.setRowCount(0);
+        scrollPaneCodigoIntermedio.setVisible(false);
+        scrollPaneCodigoObjeto.setVisible(false);
+    }
+
+    public void showCodigoIntermedio(String codigoIntermedio) {
+        scrollPaneCodigoIntermedio.setVisible(true);
+        txtAreaCodigoIntermedio.setText(codigoIntermedio);
+    }
+
+    public void showCodigoObjeto(String codigoObjeto) {
+        scrollPaneCodigoObjeto.setVisible(true);
+        txtAreaCodigoObjeto.setText(codigoObjeto);
     }
 
     public void showMessage(String message, String title, int type) {
@@ -99,18 +104,27 @@ public class Vista extends JFrame implements ComponentListener {
         short w = (short) this.getWidth();
         short h = (short) this.getHeight();
 
-        areaComponent.setBounds((short) (w * .02), (short) (h * .05),
-                (short) (w * .95), (short) (h * .50));
+        areaComponent.setBounds((short) (w * .02), (short) (h * .02),
+                (short) (w * .95), (short) (h * .45));
 
-        scrollPaneTabla.setBounds(areaComponent.getWidth() - areaComponent.getWidth() / 3,
-                areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05),
-                areaComponent.getWidth() / 3,
-                (short) (h * .9) - (areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05)));
+        lblCodigoIntermedio.setBounds(areaComponent.getX(),
+                areaComponent.getY() + (short) (areaComponent.getHeight() * 1.02),
+                (short) (areaComponent.getWidth() * .4), (short) (h * .05));
+
+        lblCodigoObjeto.setBounds((short) (lblCodigoIntermedio.getX() + lblCodigoIntermedio.getWidth() * 1.05),
+                lblCodigoIntermedio.getY(), lblCodigoIntermedio.getWidth(), lblCodigoIntermedio.getHeight());
 
         scrollPaneCodigoIntermedio.setBounds(areaComponent.getX(),
-                areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05),
-                (short) (areaComponent.getWidth() * .9 - scrollPaneTabla.getWidth()),
-                (short) (h * .9) - (areaComponent.getY() + (short) (areaComponent.getHeight() * 1.05)));
+                lblCodigoIntermedio.getY() + lblCodigoIntermedio.getHeight(),
+                lblCodigoIntermedio.getWidth(),
+                (short) (h * .92) - (lblCodigoIntermedio.getHeight() + areaComponent.getY()
+                        + (short) (areaComponent.getHeight() * 1.05)));
+
+        scrollPaneCodigoObjeto.setBounds(
+                lblCodigoObjeto.getX(),
+                scrollPaneCodigoIntermedio.getY(),
+                scrollPaneCodigoIntermedio.getWidth(),
+                scrollPaneCodigoIntermedio.getHeight());
 
         FlatLaf.updateUI();
     }

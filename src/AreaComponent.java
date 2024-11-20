@@ -14,6 +14,7 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import javax.swing.JScrollPane;
 import compilerTools.Functions;
+import variable_info.TokenInfo;
 
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnLLimpiar.setText("Clear");
         add(btnLLimpiar);
 
-        btnCompilador = new MyButton[4];
+        btnCompilador = new MyButton[5];
         for (byte i = 0; i < btnCompilador.length; i++) {
             btnCompilador[i] = new MyButton(i);
         }
@@ -75,14 +76,17 @@ public class AreaComponent extends JPanel implements ComponentListener {
         btnCompilador[1].setName("Syntax");
         btnCompilador[2].setName("Semantic");
         btnCompilador[3].setName("Codigo Intermedio");
+        btnCompilador[4].setName("Codigo Objeto");
 
         btnCompilador[0].setText(btnCompilador[0].getName());
         btnCompilador[1].setText(btnCompilador[1].getName());
         btnCompilador[2].setText(btnCompilador[2].getName());
         btnCompilador[3].setText(btnCompilador[3].getName());
+        btnCompilador[4].setText(btnCompilador[4].getName());
 
         btnCompilador[2].setEnabled(false);
-        btnCompilador[3].setEnabled(false);
+        // btnCompilador[3].setEnabled(false);
+        btnCompilador[4].setEnabled(false);
 
         for (short i = 0; i < btnCompilador.length; i++) {
             add(btnCompilador[i]);
@@ -97,6 +101,9 @@ public class AreaComponent extends JPanel implements ComponentListener {
     }
 
     public void clear() {
+        btnCompilador[2].setEnabled(false);
+        btnCompilador[3].setEnabled(true);
+        btnCompilador[4].setEnabled(false);
         txtAreaProgram.setText("");
         txtAreaTokens.setText("");
         lblParser.setVisible(false);
@@ -156,6 +163,10 @@ public class AreaComponent extends JPanel implements ComponentListener {
 
         btnCompilador[3].setBounds(lblSemantic.getX(), lblSemantic.getY() + (short) (lblSemantic.getHeight() * 1.4),
                 btnCompilador[2].getWidth(), btnCompilador[2].getHeight());
+
+        btnCompilador[4].setBounds(btnCompilador[3].getX(),
+                btnCompilador[3].getY() + (short) (btnCompilador[3].getHeight() * 1.4),
+                btnCompilador[3].getWidth(), btnCompilador[3].getHeight());
 
         FlatLaf.updateUI();
     }

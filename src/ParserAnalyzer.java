@@ -1,258 +1,255 @@
 
 import java.util.List;
-import java.util.Queue;
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
-import java.util.LinkedList;
+import ast.*;
+import exeptions.ParserException;
+import variable_info.TokenInfo;
+import variable_info.Tokens;
+import variable_info.VariableInfo;
 
 public class ParserAnalyzer {
-    private Queue<TokenInfo> tokens;
-    private TokenInfo token;
-    private boolean goToNextTk;
-
-    private String type;
-    private StringBuilder str;
-    private String identifier;
-
+    private List<TokenInfo> tokens;
+    private int currentTokenIndex;
+    private TokenInfo currentToken;
     private Map<String, VariableInfo> symbolTable;
-    private String id;
-    private int bytes;
     private boolean isNotDeclared;
-    private boolean duplicated;
+    private boolean isNotInitialized;
+    private boolean duplicate;
+    private String id;
+    private int stringCounter;
 
-    public ParserAnalyzer(List<TokenInfo> tokensList) {
-        this.tokens = new LinkedList<>(tokensList);
-        symbolTable = new HashMap<>();
-        isNotDeclared = false;
-        goToNextTk = true;
+    public ParserAnalyzer(List<TokenInfo> tokens) {
+        this.tokens = tokens;
+        this.currentTokenIndex = 0;
+        this.stringCounter = 0;
+        this.symbolTable = new LinkedHashMap<>();
+        this.isNotDeclared = false;
+        this.isNotInitialized = false;
+        this.duplicate = false;
+        this.id = null;
+        if (!tokens.isEmpty())
+            this.currentToken = tokens.get(currentTokenIndex);
     }
 
-    public boolean parseProgram() throws ParserException {
+    public ASTNode parseProgram() throws ParserException {
+        List<ASTNode> statements = new ArrayList<>();
+
         while (hasNext()) {
-            if (goToNextTk) {
-                token = getNextToken();
-                System.out.println("Program:   " + token.getName() + " " + token.getValue());
-                // goToNextTk = true;
-            }
-            if (!parseStatement()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean parseStatement() {
-        System.out.println("Statement:   " + token.getName() + " " + token.getValue());
-        if (isType()) {
-            type = token.getValue();
-            if (token.isTokenType(Tokens.INT))
-                bytes = 4;
-            else if (token.isTokenType(Tokens.STRING))
-                bytes = 80;
-            return parseDeclaration();
-        } else if (token.isTokenType(Tokens.IDENTIFIER)) {
-            identifier = token.getValue();
-            return parseAssignment();
-        } else if (token.isTokenType(Tokens.BDZTOUSER)) {
-            return parsePrint();
-        } else
-            throw new ParserException("Error: Invalid statement", token);
-    }
-
-    public boolean parseDeclaration() {
-        do {
-            System.out.println("Declaration:   " + token.getName() + " " + token.getValue());
-            token = advanceToken("Error: Invalid declaration");
-            if (!token.isTokenType(Tokens.IDENTIFIER)) {
-                throw new ParserException("Error: Expected identifier in declaration", token);
-            }
-
-            identifier = token.getValue();
-            if (symbolTable.containsKey(identifier) && symbolTable.get(identifier).getType() != null) {
-                id = identifier;
-                duplicated = true;
-            }
-
-            symbolTable.put(identifier, new VariableInfo(type, bytes));
-            // semanticAnalyzer.declareVariable(identifier, type);
-
-            if (!hasNext())
-                return true;
-            token = getNextToken();
-            if (!token.isTokenType(Tokens.COMA)) {
-                if (!token.isTokenType(Tokens.ASSIGN)) {
-                    goToNextTk = false;
-                    return parseStatement();
-                }
-                if (!parseTerms()) {
-                    throw new ParserException("Error: Invalid declaration term ", token);
-                }
-
-                if (token.isTokenType(Tokens.IDENTIFIER) && !symbolTable.containsKey(token.getValue())) {
-                    id = token.getValue();
-                    isNotDeclared = true;
-                }
-
-                symbolTable.put(identifier, new VariableInfo(type, str.toString(), bytes));
-                // if (token.isTokenType(Tokens.IDENTIFIER)) {
-                // VariableInfo matchedVar = semanticAnalyzer.lookupVariable(token.getValue());
-                // semanticAnalyzer.initializeVariable(identifier, matchedVar);
-                // }
-                // semanticAnalyzer.initializeVariable(identifier, str.toString());
-
-                if (hasNext())
-                    token = advanceToken("Error: Invalid declaration");
-            }
-            bytes = 80;
-        } while (token.isTokenType(Tokens.COMA));
-        goToNextTk = false;
-        return true;
-    }
-
-    public boolean parseAssignment() {
-        System.out.println("Assignment:   " + token.getName() + " " + token.getValue());
-        token = advanceToken("Error: Invalid assignment");
-        if (token.isTokenType(Tokens.ASSIGN) && parseTerms()) {
-            if (!symbolTable.containsKey(identifier)) {
-                id = identifier;
-                isNotDeclared = true;
-            }
-            if (token.isTokenType(Tokens.IDENTIFIER) && !symbolTable.containsKey(token.getValue())) {
-                id = token.getValue();
-                isNotDeclared = true;
-            }
-
-            VariableInfo variableInfo = symbolTable.get(identifier);
-
-            if (variableInfo != null && variableInfo.getType() != null) {
-                type = variableInfo.getType();
-                // bytes = variableInfo.getBytes();
-                symbolTable.put(identifier, new VariableInfo(type, str.toString(), bytes));
+            if (isType()) {
+                statements.addAll(parseDeclaration());
+            } else if (currentToken.getNumber() == Tokens.IDENTIFIER) {
+                statements.add(parseAssignment());
+            } else if (currentToken.getNumber() == Tokens.BDZTOUSER) {
+                statements.add(parsePrint());
             } else {
-                symbolTable.put(identifier, new VariableInfo(null, str.toString(), bytes));
+                throw new ParserException("Error de sintaxis en el token: ", currentToken);
             }
-            // semanticAnalyzer.checkType(identifier, str.toString());
-            return true;
         }
 
-        goToNextTk = false;
-        throw new ParserException("Error: Invalid assignment", token);
-    }
+        if (statements.isEmpty())
+            throw new ParserException("Error: No se encontraron declaraciones o asignaciones.", currentToken);
 
-    private boolean parseString() {
-        if (!token.isTokenType(Tokens.QUOTE)) {
-            throw new ParserException("Error: Invalid string expected \"", token);
-        }
-        token = advanceToken("Error: Invalid string expected Identifier or Number");
-        str.append(token.getValue());
-        do {
-            if (!hasNext()) {
-                throw new ParserException("Error: Invalid string expected \"", token);
-            }
-            if (!(token.isTokenType(Tokens.IDENTIFIER) || token.isTokenType(Tokens.NUMBER))) {
-                throw new ParserException("Error: Invalid string expected Identifier or Number", token);
-            }
-            token = getNextToken();
-            str.append(" " + token.getValue());
-            if (token.isTokenType(Tokens.QUOTE)) {
-                str.replace(str.length() - 2, str.length(), token.getValue());
-                System.out.println("String:   " + token.getName() + " " + token.getValue());
-                return true;
-            }
-        } while (token.isTokenType(Tokens.IDENTIFIER) || token.isTokenType(Tokens.NUMBER));
-
-        throw new ParserException("Error: Invalid string", token);
-    }
-
-    private boolean isFactor() {
-        if (token.isTokenType(Tokens.NUMBER)) {
-            bytes = 4;
-            return true;
-        } else if (token.isTokenType(Tokens.IDENTIFIER)) {
-            if (symbolTable.containsKey(token.getValue())) {
-                VariableInfo variableInfo = symbolTable.get(token.getValue());
-                if (variableInfo.getType() != null) {
-                    bytes = variableInfo.getBytes();
-                    return true;
-                }
-            }
-        } else if (parseString()) {
-            bytes = str.length() - 2 + 1;
-            System.out.println(str.toString() + " " + bytes);
-            return true;
-        }
-        return false;
-    }
-
-    public boolean parseTerms() {
-        token = advanceToken("Error: Invalid Term");
-        str = new StringBuilder();
-        str.append(token.getValue());
-
-        System.out.println("Term:   " + token.getName() + " " + token.getValue());
-        if (!isFactor()) {
-            throw new ParserException("Error: Invalid factor: ", token);
-        }
-
-        if (!hasNext()) {
-            return true;
-        }
-        if (isOperator(peekNextToken())) {
-            System.out.println("Operator:   " + token.getName() + " " + token.getValue() + "-----");
-            token = getNextToken();
-            str.append(" " + token.getValue());
-            return parseTerms();
-        }
-        goToNextTk = true;
-        return true;
-    }
-
-    public boolean parsePrint() {
-        token = advanceToken("Error: Invalid print statement");
-        if (!token.isTokenType(Tokens.LPAR))
-            throw new ParserException("Error: Invalid print Expected '('", token);
-        // if (!hasNext())
-        // throw new ParseException("Error: Invalid print expected a TERM", token);
-        do {
-            if (!parseTerms()) {
-                throw new ParserException("Error: Invalid Term statement", token);
-            }
-            token = advanceToken("Error: Invalid print statement");
-            if (token.isTokenType(Tokens.RPAR)) {
-                goToNextTk = true;
-                return true;
-            }
-        } while (token.isTokenType(Tokens.COMA) && hasNext());
-
-        throw new ParserException("Error: Invalid print statement", token);
+        return new ProgramNode(statements);
     }
 
     private boolean isType() {
-        return token.getNumber() == Tokens.INT || token.getNumber() == Tokens.STRING;
+        return currentToken.getNumber() == Tokens.INT || currentToken.getNumber() == Tokens.STRING;
     }
 
-    private boolean isOperator(byte number) {
-        return number == Tokens.SUM || number == Tokens.REST || number == Tokens.MULT;
+    private List<ASTNode> parseDeclaration() throws ParserException {
+        String tipo = currentToken.getValue();
+        List<ASTNode> declarations = new ArrayList<>();
+
+        do {
+            currentToken = getNextToken(); // id
+
+            String variable = currentToken.getValue();
+            if (symbolTable.containsKey(variable)) {
+                duplicate = true;
+                id = variable;
+            } else {
+                int bytes = tipo.equals("int") ? 2 : tipo.equals("String") ? 80 : 0;
+                symbolTable.put(variable, new VariableInfo(tipo, bytes));
+            }
+
+            if (hasNext()) {
+                currentToken = getNextToken();
+            }
+
+            if (currentToken.getNumber() == Tokens.ASSIGN) {
+                currentToken = getNextToken();
+                ASTNode expression = parseExpression();
+
+                String expresionStr = expressionToString(expression);
+                symbolTable.get(variable).setValue(expresionStr);
+                if (tipo.equals("String")) {
+                    symbolTable.get(variable).setBytes(expresionStr.length() - 2);
+                }
+
+                declarations.add(new DeclarationNode(variable, tipo, expression));
+            } else {
+                declarations.add(new DeclarationNode(variable, tipo));
+            }
+
+        } while (currentToken.getNumber() == Tokens.COMA);
+
+        return declarations;
+    }
+
+    private AssignmentNode parseAssignment() throws ParserException {
+        String variable = currentToken.getValue();
+        currentToken = getNextToken();
+
+        if (!symbolTable.containsKey(variable)) {
+            isNotDeclared = true;
+            id = variable;
+        }
+        if (currentToken.getNumber() != Tokens.ASSIGN) {
+            throw new ParserException("Se esperaba el operador de asignación '='", currentToken);
+        }
+
+        currentToken = getNextToken();
+        ASTNode expression = parseExpression();
+
+        if (symbolTable.containsKey(variable)) {
+            String expresionStr = expressionToString(expression);
+            if (!symbolTable.get(variable).isInitialized())
+                symbolTable.get(variable).setValue(expresionStr);
+            else if (symbolTable.get(variable).getType().equals("String")) {
+                String temp = expresionStr + "_str";
+                symbolTable.put(temp, new VariableInfo("String", expresionStr, expresionStr.length() - 2));
+            }
+
+        }
+
+        return new AssignmentNode(variable, expression);
+    }
+
+    private PrintNode parsePrint() throws ParserException {
+        currentToken = getNextToken(); // parentesis izquierdo
+
+        if (currentToken.getNumber() != Tokens.LPAR) {
+            throw new ParserException("Se esperaba un paréntesis izquierdo '('.", currentToken);
+        }
+
+        List<ASTNode> expressions = new ArrayList<>();
+        do {
+            currentToken = getNextToken(); // expresión
+            ASTNode exp = parseExpression();
+            if (exp instanceof LiteralNode && ((LiteralNode) exp).getValue().startsWith("\"")) {
+                stringCounter++;
+                symbolTable.put("str" + stringCounter,
+                        new VariableInfo("String", exp.toString(), exp.toString().length() - 2));
+            }
+            expressions.add(exp);
+
+        } while (currentToken.getNumber() == Tokens.COMA);
+
+        if (currentToken.getNumber() != Tokens.RPAR) {
+            throw new ParserException("Se esperaba un paréntesis derecho ')'.", currentToken);
+        }
+
+        if (hasNext())
+            currentToken = getNextToken();
+
+        return new PrintNode(expressions);
+    }
+
+    private ASTNode parseExpression() throws ParserException {
+        ASTNode term = parseTerm();
+
+        while (currentToken.getNumber() == Tokens.SUM || currentToken.getNumber() == Tokens.REST) {
+            String operador = currentToken.getValue();
+            currentToken = getNextToken();
+            ASTNode rightTerm = parseTerm();
+            term = new BinaryOperationNode(operador, term, rightTerm);
+        }
+        return term;
+    }
+
+    private ASTNode parseTerm() throws ParserException {
+        ASTNode factor = parseFactor();
+
+        while (currentToken.getNumber() == Tokens.MULT || currentToken.getNumber() == Tokens.ASSIGN) {
+            String operador = currentToken.getValue();
+            currentToken = getNextToken();
+            ASTNode rightFactor = parseFactor();
+            factor = new BinaryOperationNode(operador, factor, rightFactor);
+        }
+
+        return factor;
+    }
+
+    private ASTNode parseFactor() throws ParserException {
+        if (currentToken.getNumber() == Tokens.NUMBER) {
+            String value = currentToken.getValue();
+            if (hasNext()) {
+                currentToken = getNextToken();
+            }
+            return new LiteralNode(value);
+        } else if (currentToken.getNumber() == Tokens.IDENTIFIER) {
+            String variable = currentToken.getValue();
+            if (!symbolTable.get(variable).isInitialized()) {
+                isNotInitialized = true;
+                id = variable;
+            }
+            if (hasNext()) {
+                currentToken = getNextToken();
+            }
+            return new VariableNode(variable);
+        } else if (currentToken.getNumber() == Tokens.LPAR) {
+            currentToken = getNextToken();
+            ASTNode expression = parseExpression();
+            if (currentToken.getNumber() != Tokens.RPAR) {
+                throw new ParserException("Se esperaba un paréntesis derecho ')'", currentToken);
+            }
+            if (hasNext())
+                currentToken = getNextToken();
+
+            return expression;
+        } else if (currentToken.getNumber() == Tokens.QUOTE) {
+            StringBuilder stringLiteral = new StringBuilder();
+            stringLiteral.append(currentToken.getValue());
+            currentToken = getNextToken();
+
+            while (currentToken.getNumber() != Tokens.QUOTE) {
+                stringLiteral.append(currentToken.getValue());
+                currentToken = getNextToken();
+                stringLiteral.append(currentToken.getValue());
+            }
+            if (hasNext())
+                currentToken = getNextToken();
+
+            return new LiteralNode(stringLiteral.toString());
+        } else {
+            throw new ParserException("Error de sintaxis en el factor: ", currentToken);
+        }
+    }
+
+    private String expressionToString(ASTNode expression) {
+        if (expression instanceof LiteralNode) {
+            return ((LiteralNode) expression).getValue();
+        } else if (expression instanceof VariableNode) {
+            return ((VariableNode) expression).getName();
+        } else if (expression instanceof BinaryOperationNode) {
+            BinaryOperationNode binOp = (BinaryOperationNode) expression;
+            return expressionToString(binOp.getIzquierda()) + " " +
+                    binOp.getOperador() + " " +
+                    expressionToString(binOp.getDerecha());
+        }
+        return "";
     }
 
     private TokenInfo getNextToken() {
-        return tokens.poll();
-    }
-
-    private boolean hasNext() {
-        return !tokens.isEmpty();
-    }
-
-    private byte peekNextToken() {
-        return tokens.peek().getNumber();
-    }
-
-    private TokenInfo advanceToken(String message) {
-        if (!hasNext()) {
-            throw new ParserException(message, token);
+        if (currentTokenIndex < tokens.size() - 1) {
+            currentTokenIndex++;
+            return tokens.get(currentTokenIndex);
+        } else {
+            return null;
         }
-        return getNextToken();
     }
 
     public Map<String, VariableInfo> getSymbolTable() {
@@ -264,10 +261,18 @@ public class ParserAnalyzer {
     }
 
     public boolean getDuplicated() {
-        return duplicated;
+        return duplicate;
     }
 
     public String getId() {
         return id;
+    }
+
+    public boolean getIsNotInitialized() {
+        return isNotInitialized;
+    }
+
+    private boolean hasNext() {
+        return currentTokenIndex < tokens.size() - 1;
     }
 }

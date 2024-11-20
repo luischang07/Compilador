@@ -2,6 +2,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import variable_info.TokenInfo;
+import variable_info.Tokens;
+
 public class ScannerAnalyzer {
 
     String input;
